@@ -11,6 +11,12 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from osgeo_utils.gdal_fillnodata import gdal_fillnodata
 from scipy import fft, ndimage
+from scipy.ndimage import gaussian_filter
+from tqdm import tqdm
+
+from dolphin import io
+from dolphin._overviews import Resampling, create_image_overviews
+from dolphin.utils import DummyProcessPoolExecutor
 
 
 def filter_long_wavelength(
@@ -150,9 +156,11 @@ def filter_rasters(
     cor_filenames: list[Path] | None = None,
     conncomp_filenames: list[Path] | None = None,
     temporal_coherence_filename: Path | None = None,
-    wavelength_cutoff: float = 50_000,
-    correlation_cutoff: float = 0.5,
     output_dir: Path | None = None,
+    wavelength_cutoff: float = 50_000,
+    fill_value: float | None = None,
+    correlation_cutoff: float = 0.5,
+    temporal_coherence_cutoff: float = 0.5,
     max_workers: int = 4,
 ) -> list[Path]:
     """Filter a list of unwrapped interferogram files using a long-wavelength filter.
@@ -179,6 +187,13 @@ def filter_rasters(
     correlation_cutoff : float, optional
         Threshold of correlation (if passing `cor_filenames`) to use to ignore pixels
         during filtering.
+    temporal_coherence_cutoff : float, optional
+        Threshold of temporal_coherence to use to ignore pixels during filtering.
+        Default is 0.5.
+    fill_value : float, optional
+        Value to place in output pixels which were masked.
+        If `None`, masked pixels are filled with the ramp value fitted
+        before filtering to suppress outliers.
     output_dir : Path | None, optional
         Directory to save the filtered results.
         If None, saves in the same location as inputs with .filt.tif extension.
@@ -190,30 +205,31 @@ def filter_rasters(
     list[Path]
         Output filtered rasters.
 
-    Notes
-    -----
-    - If temporal_coherence_filename is provided, pixels with coherence < 0.5 are masked
-
     """
-    from dolphin import io
-
-    bad_pixel_mask = np.zeros(
-        io.get_raster_xysize(unw_filenames[0])[::-1], dtype="bool"
-    )
+    bad_pixel_mask = np.zeros(io.get_raster_shape(unw_filenames[0])[-2:], dtype="bool")
     if temporal_coherence_filename:
         bad_pixel_mask = bad_pixel_mask | (
-            io.load_gdal(temporal_coherence_filename) < 0.5
+            io.load_gdal(temporal_coherence_filename) < temporal_coherence_cutoff
         )
 
     if output_dir is None:
         assert unw_filenames
         output_dir = unw_filenames[0].parent
     output_dir.mkdir(exist_ok=True)
-    ctx = mp.get_context("spawn")
 
-    with ProcessPoolExecutor(max_workers, mp_context=ctx) as pool:
+    num_parallel = min(max_workers, len(unw_filenames))
+    Executor = ProcessPoolExecutor if num_parallel > 1 else DummyProcessPoolExecutor
+    ctx = mp.get_context("spawn")
+    tqdm.set_lock(ctx.RLock())
+
+    with Executor(
+        max_workers=max_workers,
+        mp_context=ctx,
+        initializer=tqdm.set_lock,
+        initargs=(tqdm.get_lock(),),
+    ) as exc:
         return list(
-            pool.map(
+            exc.map(
                 _filter_and_save,
                 unw_filenames,
                 cor_filenames or repeat(None),
@@ -222,6 +238,7 @@ def filter_rasters(
                 repeat(wavelength_cutoff),
                 repeat(bad_pixel_mask),
                 repeat(correlation_cutoff),
+                repeat(fill_value),
             )
         )
 
@@ -234,11 +251,9 @@ def _filter_and_save(
     wavelength_cutoff: float,
     bad_pixel_mask: NDArray[np.bool_],
     correlation_cutoff: float = 0.5,
+    fill_value: float | None = None,
 ) -> Path:
     """Filter one interferogram (wrapper for multiprocessing)."""
-    from dolphin import io
-    from dolphin._overviews import Resampling, create_image_overviews
-
     # Average for the pixel spacing for filtering
     _, x_res, _, _, _, y_res = io.get_raster_gt(unw_filename)
     pixel_spacing = (abs(x_res) + abs(y_res)) / 2
@@ -255,6 +270,7 @@ def _filter_and_save(
         bad_pixel_mask=bad_pixel_mask,
         pixel_spacing=pixel_spacing,
         workers=1,
+        fill_value=fill_value,
     )
     io.round_mantissa(filt_arr, keep_bits=9)
     output_name = output_dir / Path(unw_filename).with_suffix(".filt.tif").name
@@ -293,8 +309,6 @@ def gaussian_filter_nan(
         Filtered version of `image`.
 
     """
-    from scipy.ndimage import gaussian_filter
-
     if np.sum(np.isnan(image)) == 0:
         return gaussian_filter(image, sigma=sigma, mode=mode, **kwargs)
 

@@ -45,6 +45,7 @@ __all__ = [
     "get_raster_gt",
     "get_raster_metadata",
     "get_raster_nodata",
+    "get_raster_shape",
     "get_raster_units",
     "get_raster_xysize",
     "load_gdal",
@@ -259,11 +260,19 @@ def copy_projection(src_file: Filename, dst_file: Filename) -> None:
 
 
 def get_raster_xysize(filename: Filename) -> tuple[int, int]:
-    """Get the xsize/ysize of a GDAL-readable raster."""
+    """Get the xsize, ysize of a GDAL-readable raster."""
     ds = _get_gdal_ds(filename)
     xsize, ysize = ds.RasterXSize, ds.RasterYSize
     ds = None
     return xsize, ysize
+
+
+def get_raster_shape(filename: Filename) -> tuple[int, int, int]:
+    """Get the (number of bands, rows, columns) of a GDAL-readable raster."""
+    import rasterio as rio
+
+    with rio.open(filename) as src:
+        return src.shape
 
 
 def get_raster_nodata(filename: Filename, band: int = 1) -> Optional[float]:
