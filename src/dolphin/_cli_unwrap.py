@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from dolphin.workflows.config import UnwrapMethod
+from dolphin.workflows.config import UnwrapMethod, UnwrapOptions
 
 if TYPE_CHECKING:
     _SubparserType = argparse._SubParsersAction[argparse.ArgumentParser]
@@ -59,7 +59,7 @@ def get_parser(subparser=None, subcommand_name="unwrap") -> argparse.ArgumentPar
         ),
     )
     inputs.add_argument(
-        "--temp-coh-filename",
+        "--temporal-coherence-filename",
         help="Path to temporal coherence file from phase linking",
     )
     parser.add_argument(
@@ -93,27 +93,39 @@ def get_parser(subparser=None, subcommand_name="unwrap") -> argparse.ArgumentPar
         action="store_true",
         help="Run interpolation before unwrapping.",
     )
-
-    spurt_opts = parser.add_argument_group("Spurt options")
-    spurt_opts.add_argument(
-        "--temp-coh-threshold",
-        type=float,
-        help="Cutoff on temporal_coherence raster to choose pixels for unwrapping.",
-    )
-
-    tophu_opts = parser.add_argument_group("Tophu options")
-    # Add ability for downsampling/tiling with tophu
-    tophu_opts.add_argument(
+    algorithm_opts.add_argument(
         "--ntiles",
         type=int,
         nargs=2,
         metavar=("ROW_TILES", "COL_TILES"),
         default=(1, 1),
         help=(
-            "(using tophu) Split the interferograms into this number of tiles along the"
-            " (row, col) axis."
+            "(using snaphu/tophu) Split the interferograms into this number of tiles"
+            " along the (row, col) axis."
         ),
     )
+    algorithm_opts.add_argument(
+        "--tile-overlap",
+        type=int,
+        nargs=2,
+        metavar=("ROW_OVERLAP", "COL_OVERLAP"),
+        default=(400, 400),
+        help=(
+            "(using snaphu) For tiling, number of pixels to overlap along the (row,"
+            " col) axis."
+        ),
+    )
+
+    spurt_opts = parser.add_argument_group("Spurt options")
+    spurt_opts.add_argument(
+        "--temporal-coherence-threshold",
+        type=float,
+        default=0.6,
+        help="Cutoff on temporal_coherence raster to choose pixels for unwrapping.",
+    )
+
+    tophu_opts = parser.add_argument_group("Tophu options")
+    # Add ability for downsampling/tiling with tophu
     tophu_opts.add_argument(
         "--downsample-factor",
         type=int,
@@ -136,17 +148,27 @@ def _run_unwrap(*args, **kwargs):
     """
     from dolphin import unwrap
 
-    return unwrap.run(*args, **kwargs)
+    n_parallel_unwrap = kwargs.pop("n_parallel_overlap")
+    ntiles = kwargs.pop("ntiles")
+    unwrap_options = UnwrapOptions(
+        unwrap_method=kwargs.pop("unwrap_method"),
+        run_goldstein=kwargs.pop("run_goldstein"),
+        run_interpolation=kwargs.pop("run_interpolation"),
+        snaphu_options={
+            "ntiles": ntiles,
+            "tile_overlap": kwargs.pop("tile_overlap"),
+        },
+        tophu_options={
+            "ntiles": ntiles,
+            "downsample_factor": kwargs.pop("downsample_factor"),
+        },
+        spurt_options={
+            "temporal_coherence_threshold": kwargs.pop("temporal_coherence_threshold"),
+            "solver_settings": {
+                "s_worker_count": n_parallel_unwrap,
+                "t_worker_count": 1,
+            },
+        },
+    )
 
-
-def main(args=None):
-    """Get the command line arguments and unwrap files."""
-    from dolphin import unwrap
-
-    parser = get_parser()
-    parsed_args = parser.parse_args(args)
-    unwrap.run(**vars(parsed_args))
-
-
-if __name__ == "__main__":
-    main()
+    return unwrap.run(*args, unwrap_options=unwrap_options, **kwargs)
