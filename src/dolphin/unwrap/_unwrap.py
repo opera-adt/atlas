@@ -31,7 +31,7 @@ from ._unwrap_3d import unwrap_spurt
 from ._utils import create_combined_mask, set_nodata_values
 from ._whirlwind import unwrap_whirlwind
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = ["run", "unwrap"]
 

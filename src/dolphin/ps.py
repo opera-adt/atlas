@@ -18,7 +18,7 @@ from dolphin.io import EagerLoader, StackReader, repack_raster
 
 gdal.UseExceptions()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 NODATA_VALUES = {"ps": 255, "amp_dispersion": 0.0, "amp_mean": 0.0}
 

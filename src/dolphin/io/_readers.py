@@ -31,7 +31,7 @@ from ._background import _DEFAULT_TIMEOUT, BackgroundReader
 from ._paths import S3Path
 from ._utils import _ensure_slices, _unpack_3d_slices
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = [
     "BinaryReader",

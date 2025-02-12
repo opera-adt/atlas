@@ -17,7 +17,7 @@ from dolphin._types import Bbox, PathOrStr
 
 gdal.UseExceptions()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 class MaskConvention(IntEnum):

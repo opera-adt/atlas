@@ -14,7 +14,7 @@ from dolphin.workflows import UnwrapMethod
 from ._constants import CONNCOMP_SUFFIX, DEFAULT_CCL_NODATA, DEFAULT_UNW_NODATA
 from ._utils import _redirect_unwrapping_log, _zero_from_mask
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def multiscale_unwrap(

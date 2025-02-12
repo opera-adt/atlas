@@ -12,7 +12,7 @@
                 "timestamp": "timestamp",
                 "message": "message",
                 "level": "levelname",
-                "logger": "name",
+                "filename": "filename",
                 "function": "funcName",
                 "line": "lineno",
                 "thread_name": "threadName"
@@ -27,11 +27,9 @@
             "stream": "ext://sys.stderr"
         },
         "file": {
-            "class": "logging.handlers.RotatingFileHandler",
+            "class": "logging.FileHandler",
             "level": "INFO",
-            "formatter": "json",
-            "maxBytes": 10000000,
-            "backupCount": 3
+            "formatter": "json"
         }
     },
     "loggers": {

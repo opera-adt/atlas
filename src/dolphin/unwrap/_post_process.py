@@ -10,7 +10,7 @@ from scipy.interpolate import NearestNDInterpolator
 
 TWOPI = 2 * np.pi
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @njit(nogil=True)

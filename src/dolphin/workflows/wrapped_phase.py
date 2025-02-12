@@ -17,7 +17,7 @@ from dolphin.workflows import UnwrapMethod
 from . import InterferogramNetwork, sequential
 from .config import DisplacementWorkflow
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @log_runtime

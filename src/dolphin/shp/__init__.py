@@ -10,7 +10,7 @@ from dolphin.workflows import ShpMethod
 
 from . import _glrt, _ks
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = ["estimate_neighbors"]
 

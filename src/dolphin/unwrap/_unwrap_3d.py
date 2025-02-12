@@ -21,7 +21,7 @@ from dolphin.workflows.config import SpurtOptions
 from ._constants import CONNCOMP_SUFFIX, DEFAULT_CCL_NODATA, UNW_SUFFIX
 from ._post_process import interpolate_masked_gaps
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 DEFAULT_OPTIONS = SpurtOptions()
 

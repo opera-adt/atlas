@@ -12,7 +12,7 @@ from dolphin.utils import full_suffix
 from ._constants import CONNCOMP_SUFFIX, DEFAULT_CCL_NODATA, DEFAULT_UNW_NODATA
 from ._utils import _zero_from_mask
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def unwrap_snaphu_py(

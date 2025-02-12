@@ -10,7 +10,7 @@ from numpy.typing import ArrayLike
 from dolphin._types import Strides
 from dolphin.utils import take_looks
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def fill_ps_pixels(

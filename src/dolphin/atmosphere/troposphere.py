@@ -22,7 +22,7 @@ from dolphin.utils import format_date_pair
 
 from ._netcdf import delay_from_netcdf, group_netcdf_by_date
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 ###########
 

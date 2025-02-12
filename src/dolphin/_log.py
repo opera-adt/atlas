@@ -83,7 +83,7 @@ def log_runtime(f: Callable[P, T]) -> Callable[P, T]:
     def test_func():
         return 2 + 4
     """
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("dolphin")
 
     @wraps(f)
     def wrapper(*args: P.args, **kwargs: P.kwargs):

@@ -19,7 +19,7 @@ __all__ = [
     "UnwrappingWorkflow",
 ]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 class UnwrappingWorkflow(WorkflowBase):

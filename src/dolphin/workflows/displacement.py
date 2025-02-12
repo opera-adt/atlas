@@ -21,7 +21,7 @@ from . import stitching_bursts, unwrapping, wrapped_phase
 from ._utils import _create_burst_cfg, _remove_dir_if_empty, parse_ionosphere_files
 from .config import DisplacementWorkflow
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @dataclass
@@ -64,8 +64,7 @@ def run(
     if cfg.log_file is None:
         cfg.log_file = cfg.work_directory / "dolphin.log"
     # Set the logging level for all `dolphin.` modules
-    for logger_name in ["dolphin", "spurt"]:
-        setup_logging(logger_name=logger_name, debug=debug, filename=cfg.log_file)
+    setup_logging(logger_name="dolphin", debug=debug, filename=cfg.log_file)
     # TODO: need to pass the cfg filename for the logger
     logger.debug(cfg.model_dump())
 

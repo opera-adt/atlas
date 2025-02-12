@@ -12,7 +12,7 @@ from dolphin._types import GeneralPath
 __all__ = ["S3Path"]
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 class S3Path(GeneralPath):

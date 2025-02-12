@@ -14,7 +14,7 @@ from dolphin._types import PathOrStr
 
 from .config import UnwrapOptions
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @log_runtime

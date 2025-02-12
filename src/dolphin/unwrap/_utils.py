@@ -9,7 +9,7 @@ import rasterio as rio
 from dolphin import io
 from dolphin._types import Filename
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def create_combined_mask(

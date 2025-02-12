@@ -22,7 +22,7 @@ from dolphin.utils import flatten, format_dates, full_suffix, get_nearest_date_i
 
 T = TypeVar("T")
 DateOrDatetime = datetime | date
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = ["run"]
 

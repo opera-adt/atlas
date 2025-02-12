@@ -15,7 +15,7 @@ from scipy.interpolate import RegularGridInterpolator as Interpolator
 
 from dolphin._types import Filename, TropoModel
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 ###########
 # Mostly inherited from RAiDER

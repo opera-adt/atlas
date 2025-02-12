@@ -24,7 +24,7 @@ from dolphin.stack import CompressedSlcPlan, MiniStackPlanner
 from .config import ShpMethod
 from .single import run_wrapped_phase_single
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = ["run_wrapped_phase_sequential"]
 

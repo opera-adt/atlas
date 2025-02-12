@@ -14,7 +14,7 @@ from dolphin.utils import _get_slices, compute_out_shape
 
 from ._common import remove_unconnected
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 _get_slices = numba.njit(_get_slices)

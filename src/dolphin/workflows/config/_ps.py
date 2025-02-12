@@ -18,7 +18,7 @@ __all__ = [
     "PsWorkflow",
 ]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 class PsWorkflow(WorkflowBase):

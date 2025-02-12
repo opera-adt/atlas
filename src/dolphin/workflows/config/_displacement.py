@@ -34,7 +34,7 @@ __all__ = [
     "DisplacementWorkflow",
 ]
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 # Add a class for troposphere, ionosphere corrections, with geometry files and DEM

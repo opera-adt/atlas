@@ -25,7 +25,7 @@ from dolphin.utils import compute_out_shape, gdal_to_numpy_type, numpy_to_gdal_t
 from ._paths import S3Path
 
 gdal.UseExceptions()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = [
     "DEFAULT_DATETIME_FORMAT",

@@ -22,7 +22,7 @@ from dolphin.stack import MiniStackInfo
 
 from .config import ShpMethod
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = ["run_wrapped_phase_single"]
 

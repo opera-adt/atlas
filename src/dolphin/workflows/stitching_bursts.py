@@ -16,7 +16,7 @@ from dolphin.io._utils import repack_raster
 
 from .config import OutputOptions
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @dataclass

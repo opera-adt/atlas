@@ -5,7 +5,7 @@ import logging
 from queue import Empty, Full, Queue
 from threading import Event, Thread, main_thread
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 _DEFAULT_TIMEOUT = 0.5
 

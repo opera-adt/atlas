@@ -8,21 +8,20 @@ import opera_utils
 
 import dolphin.ps
 from dolphin import __version__, masking
-from dolphin._log import log_runtime, setup_logging
+from dolphin._log import log_runtime
 from dolphin.io import VRTStack
 from dolphin.utils import get_max_memory_usage
 from dolphin.workflows.wrapped_phase import _get_mask
 
 from .config import DisplacementWorkflow, PsWorkflow
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @log_runtime
 def run(
     cfg: PsWorkflow | DisplacementWorkflow,
     compute_looked: bool = False,
-    debug: bool = False,
 ) -> list[Path]:
     """Run the displacement workflow on a stack of SLCs.
 
@@ -38,7 +37,6 @@ def run(
 
     """
     # Set the logging level for all `dolphin.` modules
-    setup_logging(debug=debug, filename=cfg.log_file)
     logger.debug(pformat(cfg.model_dump()))
 
     output_file_list = [

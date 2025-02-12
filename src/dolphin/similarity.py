@@ -15,7 +15,7 @@ from numpy.typing import ArrayLike
 
 from dolphin._types import PathOrStr
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 @numba.njit(nogil=True)

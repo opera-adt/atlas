@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike
 
 from .similarity import get_circle_idxs
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def interpolate(

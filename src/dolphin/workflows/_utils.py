@@ -13,7 +13,7 @@ from dolphin._types import Filename
 
 from .config import DisplacementWorkflow
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def _create_burst_cfg(

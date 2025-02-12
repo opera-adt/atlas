@@ -19,7 +19,7 @@ from dolphin._types import Bbox, Filename
 from dolphin.timeseries import ReferencePoint
 from dolphin.utils import format_date_pair
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 ###########
 

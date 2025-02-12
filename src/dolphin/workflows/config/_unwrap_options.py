@@ -13,7 +13,7 @@ from pydantic import (
 
 from ._enums import UnwrapMethod
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = [
     "PreprocessOptions",

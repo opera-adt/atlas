@@ -14,7 +14,7 @@ from dolphin._types import PathOrStr
 
 gdal.UseExceptions()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 DEFAULT_LEVELS = [4, 8, 16, 32, 64]
 

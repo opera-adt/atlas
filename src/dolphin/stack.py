@@ -19,7 +19,7 @@ from dolphin.io import DEFAULT_DATETIME_FORMAT
 from dolphin.utils import format_dates
 
 DateOrDatetime = datetime | date
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 class CompressedSlcPlan(str, Enum):

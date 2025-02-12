@@ -1,7 +1,6 @@
 asv
 black
 boto3
-flake8
 moto[server,s3]
 pooch
 pre-commit

@@ -13,7 +13,7 @@ from shapely.geometry import box
 import dolphin.atmosphere._utils as utils
 import dolphin.atmosphere.model_levels as ml
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 _ZMIN = np.float64(-100)  # minimum required height
 _ZREF = np.float64(26000)  # maximum integration height

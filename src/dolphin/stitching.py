@@ -22,7 +22,7 @@ from dolphin import io, utils
 from dolphin._types import Bbox, Filename
 from dolphin.io import DEFAULT_DATETIME_FORMAT
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 
 def merge_by_date(

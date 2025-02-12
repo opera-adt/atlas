@@ -23,7 +23,7 @@ from dolphin.stack import CompressedSlcPlan
 from ._enums import ShpMethod
 from ._yaml_model import YamlModel
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 
 __all__ = [
     "HalfWindow",

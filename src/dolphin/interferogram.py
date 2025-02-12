@@ -23,7 +23,7 @@ from dolphin.filtering import gaussian_filter_nan
 
 gdal.UseExceptions()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dolphin")
 DateOrDatetime = Union[datetime, date]
 
 DEFAULT_SUFFIX = ".int.vrt"
