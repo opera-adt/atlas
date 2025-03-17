@@ -540,8 +540,8 @@ def xy_to_rowcol(
     # Need to convert to int, otherwise we get a float
     if do_round:
         # round up to the nearest pixel, instead of banker's rounding
-        row = int(math.floor(row + 0.5))
-        col = int(math.floor(col + 0.5))
+        row = math.floor(row + 0.5)
+        col = math.floor(col + 0.5)
     return int(row), int(col)
 
 
