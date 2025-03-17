@@ -366,7 +366,7 @@ def _write_results_to_xarray(
     )
 
     # Write projection system mapping
-    ds["crs"] = int(-2147483647)  # dummy placeholder
+    ds["crs"] = -2147483647  # dummy placeholder
     for k, v in crs.to_cf().items():
         ds.crs.attrs[k] = v
 

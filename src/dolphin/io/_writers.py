@@ -18,6 +18,7 @@ import rasterio
 import rasterio.errors
 from numpy.typing import ArrayLike, DTypeLike
 from rasterio.windows import Window
+from typing_extensions import Self
 
 from dolphin._types import Filename
 
@@ -173,7 +174,7 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
 
     @classmethod
     def create(
-        cls: type[RasterT],
+        cls,
         fp: Filename,
         width: int | None = None,
         height: int | None = None,
@@ -184,7 +185,7 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
         *,
         like_filename: Filename | None = None,
         **kwargs: Any,
-    ) -> RasterT:
+    ) -> Self:
         """Create a new single-band raster dataset.
 
         If another raster is passed via the `like` argument, the new dataset will

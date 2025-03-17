@@ -1,4 +1,4 @@
-from ._background import *  # noqa: A005
+from ._background import *
 from ._blocks import *
 from ._core import *
 from ._paths import *

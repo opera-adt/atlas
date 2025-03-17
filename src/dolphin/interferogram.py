@@ -352,7 +352,7 @@ class Network:
         **kwargs: Any,
     ):
         if self.subdataset is None or isinstance(self.subdataset, str):
-            self._slc_to_subdataset = {slc: self.subdataset for slc in self.slc_list}
+            self._slc_to_subdataset = dict.fromkeys(self.slc_list, self.subdataset)
         else:
             # We're passing a sequence
             assert len(self.subdataset) == len(self.slc_list)

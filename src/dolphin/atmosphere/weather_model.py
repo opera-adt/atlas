@@ -166,7 +166,7 @@ class WeatherModel(ABC):
         """
         ex_buffer_lon_max = 0.0
 
-        if self._Name in "HRRR HRRR-AK HRES".split():
+        if self._Name in ["HRRR", "HRRR-AK", "HRES"]:
             Nextra = 6  # have a bigger buffer
 
         else:
@@ -246,12 +246,12 @@ class WeatherModel(ABC):
 
     def set_level_type(self, levelType):
         """Set the level type to model levels or pressure levels."""
-        if levelType in "ml pl nat prs".split():
+        if levelType in ["ml", "pl", "nat", "prs"]:
             self._model_level_type = levelType
         else:
             raise RuntimeError(f"Level type {levelType} is not recognized")
 
-        if levelType in "ml nat".split():
+        if levelType in ["ml", "nat"]:
             self.__model_levels__()
         else:
             self.__pressure_levels__()
