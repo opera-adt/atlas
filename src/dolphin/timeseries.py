@@ -56,7 +56,7 @@ def run(
     wavelength: float | None = None,
     add_overviews: bool = True,
     extra_reference_date: datetime | None = None,
-) -> tuple[list[Path], list[Path] | None, ReferencePoint]:
+) -> tuple[list[Path], list[Path] | None, list[Path] | None, ReferencePoint]:
     """Invert the unwrapped interferograms, estimate timeseries and phase velocity.
 
     Parameters
@@ -118,10 +118,13 @@ def run(
     Returns
     -------
     inverted_phase_paths : list[Path]
-        list of Paths to inverted interferograms (single reference phase series).
+        List of Paths to inverted interferograms (single reference phase series).
     residual_paths : list[Path] | None
-        list of Paths to timeseries inversion residuals.
-        If no inversion is performed, this is be None.
+        List of Paths to timeseries inversion residuals.
+        If no inversion is performed, this is None.
+    nonzero_concomp_count_paths : list[Path] | None
+        List of Paths to counts of nonzero connected component labels after inversion
+        If no inversion is performed, or `conncomp_paths` is None, this is None.
     reference_point : ReferencePoint
         NamedTuple of reference (row, column) selected.
         If passed as input, simply returned back as output.
@@ -184,6 +187,18 @@ def run(
             wavelength=wavelength,
             method=method,
         )
+
+        if conncomp_paths:
+            logger.info("Counting non-zero connected components after inversion")
+            nonzero_concomp_count_paths = create_nonzero_conncomp_counts(
+                conncomp_file_list=conncomp_paths,
+                output_dir=output_dir,
+                block_shape=block_shape,
+                num_threads=1,
+            )
+        else:
+            nonzero_concomp_count_paths = None
+
         if extra_reference_date is None:
             final_ts_paths = inverted_phase_paths
             final_residual_paths = residual_paths
@@ -222,7 +237,7 @@ def run(
             num_threads=num_threads,
         )
 
-    return final_ts_paths, final_residual_paths, ref_point
+    return final_ts_paths, final_residual_paths, nonzero_concomp_count_paths, ref_point
 
 
 def _redo_reference(
@@ -1494,8 +1509,10 @@ def create_nonzero_conncomp_counts(
     )
 
     # Create output paths for each date
-    suffix = "_valid_count.tif"
-    out_paths = [output_dir / f"{d.strftime('%Y%m%d')}{suffix}" for d in sar_dates]
+    out_paths = [
+        output_dir / f"nonzero_conncomp_count_{d.strftime('%Y%m%d')}.tif"
+        for d in sar_dates
+    ]
 
     if all(p.exists() for p in out_paths):
         logger.info("All output files exist, skipping counting")
