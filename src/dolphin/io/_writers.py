@@ -22,7 +22,7 @@ from rasterio.windows import Window
 from dolphin._types import Filename
 
 from ._background import BackgroundWriter
-from ._utils import _unpack_3d_slices
+from ._utils import _unpack_3d_slices, round_mantissa
 
 __all__ = [
     "BackgroundBlockWriter",
@@ -40,8 +40,16 @@ if TYPE_CHECKING:
 class BackgroundBlockWriter(BackgroundWriter):
     """Class to write data to multiple files in the background using `gdal` bindings."""
 
-    def __init__(self, *, max_queue: int = 0, debug: bool = False, **kwargs):
+    def __init__(
+        self,
+        *,
+        max_queue: int = 0,
+        debug: bool = False,
+        keep_bits: int | None = None,
+        **kwargs,
+    ):
         super().__init__(nq=max_queue, name="Writer")
+        self.keep_bits = keep_bits
         if debug:
             #  background thread. Just synchronously write data
             self.notify_finished()
@@ -78,6 +86,9 @@ class BackgroundBlockWriter(BackgroundWriter):
 
         """
         from dolphin.io import write_block
+
+        if np.issubdtype(data.dtype, np.floating) and self.keep_bits is not None:
+            round_mantissa(data, keep_bits=self.keep_bits)
 
         write_block(data, filename, row_start, col_start, band=band)
 
@@ -155,6 +166,8 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
     """str or Path : Path to the file to write."""
     band: int = 1
     """int : Band index in the file to write."""
+    keep_bits: int | None = None
+    """int : For floating point rasters, the number of mantissa bits to keep."""
 
     def __post_init__(self) -> None:
         # Open the dataset.
@@ -183,6 +196,7 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
         transform: rasterio.transform.Affine | None = None,
         *,
         like_filename: Filename | None = None,
+        keep_bits: int | None = None,
         **kwargs: Any,
     ) -> RasterT:
         """Create a new single-band raster dataset.
@@ -223,6 +237,9 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
             with the same metadata (shape, data-type, driver, CRS/geotransform, etc) as
             the reference raster. All other arguments will override the corresponding
             attribute of the reference raster. Defaults to None.
+        keep_bits : int, optional
+            Number of bits to preserve in mantissa. Defaults to None.
+            Lower numbers will truncate the mantissa more and enable more compression.
         **kwargs : dict, optional
             Additional driver-specific creation options passed to `rasterio.open`.
 
@@ -252,7 +269,7 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
         with rasterio.open(fp, mode="w+", **kwargs):
             pass
 
-        return cls(fp, band=1)
+        return cls(fp, band=1, keep_bits=keep_bits)
 
     @property
     def dtype(self) -> np.dtype:
@@ -304,6 +321,8 @@ class RasterWriter(DatasetWriter, AbstractContextManager["RasterWriter"]):
         return f"{clsname}(dataset={self.dataset!r}, band={self.band!r})"
 
     def __setitem__(self, key: tuple[Index, ...], value: np.ndarray, /) -> None:
+        if np.issubdtype(value.dtype, np.floating) and self.keep_bits is not None:
+            round_mantissa(value, keep_bits=self.keep_bits)
         with rasterio.open(
             self.filename,
             "r+",
@@ -332,7 +351,13 @@ class BackgroundRasterWriter(BackgroundWriter, DatasetWriter):
     """Class to write data to files in a background thread."""
 
     def __init__(
-        self, filename: Filename, *, max_queue: int = 0, debug: bool = False, **kwargs
+        self,
+        filename: Filename,
+        *,
+        max_queue: int = 0,
+        debug: bool = False,
+        keep_bits: int | None = None,
+        **kwargs,
     ):
         super().__init__(nq=max_queue, name="Writer")
         if debug:
@@ -341,9 +366,9 @@ class BackgroundRasterWriter(BackgroundWriter, DatasetWriter):
             self.queue_write = self.write  # type: ignore[assignment]
 
         if Path(filename).exists():
-            self._raster = RasterWriter(filename)
+            self._raster = RasterWriter(filename, keep_bits=keep_bits)
         else:
-            self._raster = RasterWriter.create(filename, **kwargs)
+            self._raster = RasterWriter.create(filename, keep_bits=keep_bits, **kwargs)
         self.filename = filename
         self.ndim = 2
 
@@ -402,6 +427,7 @@ class BackgroundStackWriter(BackgroundWriter, DatasetStackWriter):
         like_filename: Filename | None = None,
         max_queue: int = 0,
         debug: bool = False,
+        keep_bits: int | None = None,
         **file_creation_kwargs,
     ):
         from dolphin.io import write_arr
@@ -421,6 +447,7 @@ class BackgroundStackWriter(BackgroundWriter, DatasetStackWriter):
             )
 
         self.file_list = file_list
+        self.keep_bits = keep_bits
 
         with rasterio.open(self.file_list[0]) as src:
             self.shape = (len(self.file_list), *src.shape)
@@ -451,11 +478,17 @@ class BackgroundStackWriter(BackgroundWriter, DatasetStackWriter):
         """
         from dolphin.io import write_block
 
+        _do_round = (
+            np.issubdtype(data.dtype, np.floating) and self.keep_bits is not None
+        )
         if data.ndim == 2:
             data = data[None, ...]
         if data.shape[0] != len(self.file_list):
             raise ValueError(f"{data.shape = }, but {len(self.file_list) = }")
         for fn, layer in zip(self.file_list, data):
+            if _do_round:
+                assert self.keep_bits is not None
+                round_mantissa(layer, keep_bits=self.keep_bits)
             write_block(layer, fn, row_start, col_start, band=band)
 
     def __setitem__(self, key, value):
