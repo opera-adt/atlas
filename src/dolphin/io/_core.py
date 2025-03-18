@@ -96,11 +96,9 @@ def load_gdal(
     *,
     band: Optional[int] = None,
     subsample_factor: Union[int, tuple[int, int]] = 1,
-    overview: Optional[int] = None,
     rows: Optional[slice] = None,
     cols: Optional[slice] = None,
-    masked: bool = False,
-) -> np.ndarray | np.ma.MaskedArray:
+) -> np.ndarray:
     """Load a gdal file into a numpy array.
 
     Parameters
@@ -112,37 +110,20 @@ def load_gdal(
     subsample_factor : int or tuple[int, int], optional
         Subsample the data by this factor. Default is 1 (no subsampling).
         Uses nearest neighbor resampling.
-    overview: int, optional
-        If passed, will load an overview of the file.
-        Raster must have existing overviews, or ValueError is raised.
     rows : slice, optional
         Rows to load. Default is None (load all rows).
     cols : slice, optional
         Columns to load. Default is None (load all columns).
-    masked : bool, optional
-        If True, return a masked array using the raster's `nodata` value.
-        Default is False.
 
     Returns
     -------
-    arr : np.ndarray or np.ma.MaskedArray
+    arr : np.ndarray
         Array of shape (bands, y, x) or (y, x) if `band` is specified,
         where y = height // subsample_factor and x = width // subsample_factor.
 
     """
     ds = _get_gdal_ds(filename)
     nrows, ncols = ds.RasterYSize, ds.RasterXSize
-
-    if overview is not None:
-        # We can handle the overviews most easily
-        bnd = ds.GetRasterBand(band or 1)
-        ovr_count = bnd.GetOverviewCount()
-        if ovr_count > 0:
-            idx = ovr_count + overview if overview < 0 else overview
-            out = bnd.GetOverview(idx).ReadAsArray()
-            bnd = ds = None
-            return out
-        logger.warning(f"Requested {overview = }, but none found for {filename}")
 
     # if rows or cols are not specified, load all rows/cols
     rows = slice(0, nrows) if rows in (None, slice(None)) else rows
@@ -184,14 +165,93 @@ def load_gdal(
         bnd = ds.GetRasterBand(band)
         bnd.ReadAsArray(xoff, yoff, xsize, ysize, buf_obj=out, resample_alg=resamp)
 
-    if not masked:
-        return out
-    # Get the nodata value
+    return out
+
+
+def load_masked(
+    filename: Filename,
+    *,
+    band: Optional[int] = None,
+    subsample_factor: Union[int, tuple[int, int]] = 1,
+    rows: Optional[slice] = None,
+    cols: Optional[slice] = None,
+) -> np.ma.MaskedArray:
+    """Load a gdal file into a numpy array, and mask the nodata value.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Path to the file to load.
+    band : int, optional
+        Band to load. If None, load all bands as 3D array.
+    subsample_factor : int or tuple[int, int], optional
+        Subsample the data by this factor. Default is 1 (no subsampling).
+        Uses nearest neighbor resampling.
+    rows : slice, optional
+        Rows to load. Default is None (load all rows).
+    cols : slice, optional
+        Columns to load. Default is None (load all columns).
+
+    Returns
+    -------
+    arr : np.ma.MaskedArray
+        Array of shape (bands, y, x) or (y, x) if `band` is specified,
+        where y = height // subsample_factor and x = width // subsample_factor.
+        The nodata value is masked.
+
+    """
+    data = load_gdal(
+        filename,
+        band=band,
+        subsample_factor=subsample_factor,
+        rows=rows,
+        cols=cols,
+    )
     nd = get_raster_nodata(filename)
     if nd is not None and np.isnan(nd):
-        return np.ma.masked_invalid(out)
+        return np.ma.masked_invalid(data)
     else:
-        return np.ma.masked_equal(out, nd)
+        return np.ma.masked_equal(data, nd)
+
+
+def load_overview(filename: Filename, *, level: int = 1) -> np.ndarray:
+    """Load an overview from a gdal file into a numpy array.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Path to the file to load.
+    level : int, optional
+        Level of the overview to load.
+
+    Returns
+    -------
+    arr : np.ndarray
+        Array of shape (bands, y, x) or (y, x) if `band` is specified,
+        where y = height // 2**level and x = width // 2**level.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the overview doesn't exist.
+
+    """
+    ds = _get_gdal_ds(filename)
+    bnd = ds.GetRasterBand(1)
+    ovr_count = bnd.GetOverviewCount()
+    assert isinstance(ovr_count, int)
+    if ovr_count == 0:
+        msg = f"No overviews found for {filename}"
+        raise ValueError(msg)
+    idx = ovr_count + level if level < 0 else level
+    if idx < 0 or idx >= ovr_count:
+        msg = (
+            f"Requested {level = }, but only {ovr_count} overviews found for {filename}"
+        )
+        raise ValueError(msg)
+    out = bnd.GetOverview(idx).ReadAsArray()
+    bnd = ds = None
+    return out
 
 
 def format_nc_filename(filename: Filename, ds_name: Optional[str] = None) -> str:
